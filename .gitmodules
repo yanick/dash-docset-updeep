@@ -1,0 +1,3 @@
+[submodule "updeep"]
+	path = updeep
+	url = ssh://git@github.com/substantial/updeep
