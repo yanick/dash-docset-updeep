@@ -1,0 +1,4 @@
+# Updeep Dash docset
+
+To install in Zeal, use the feed
+[https://raw.githubusercontent.com/yanick/dash-docset-updeep/master/updeep.xml](https://raw.githubusercontent.com/yanick/dash-docset-updeep/master/updeep.xml)
