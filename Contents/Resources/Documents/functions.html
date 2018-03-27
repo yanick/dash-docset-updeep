@@ -1,0 +1,231 @@
+<html><head><link href="assets/github-style.css" rel="stylesheet"></link><link href="assets/prism.css" rel="stylesheet"></link><script src="assets/prism.js"></script></head><body><h3><a docset-name="u" docset-type="Function" name="Function-u"></a><code>u(updates(, object))</code>
+</h3><p>Update as many values as you want, as deeply as you want. The <code>updates</code> parameter can either be an object, a function, or a value. Everything returned from <code>u</code> is frozen recursively.
+</p><p>If <code>updates</code> is an object, for each key/value, it will apply the updates specified in the value to <code>object[key]</code>.
+</p><p>If <code>updates</code> is a function, it will call the function with <code>object</code> and return the value.
+</p><p>If <code>updates</code> is a value, it will return that value.
+</p><p>Sometimes, you may want to set an entire object to a property, or a function. In that case, you'll need to use a function to return that value, otherwise it would be interpreted as an update. Ex. <code>function() { return { a: 0 }; }</code>.
+</p><p>Also available at <code>u.update(...)</code>.
+</p><h4>Simple update
+</h4><p>Object properties:
+</p><pre><code class="language-javascript">var person = {
+  name: {
+    first: 'Jane',
+    last: 'West'
+  }
+};
+
+var result = u({ name: { first: 'Susan' } }, person);
+
+expect(result).to.eql({ name: { first: 'Susan', last: 'West' } });</code></pre><p>Array elements:
+</p><pre><code class="language-javascript">var scoreboard = {
+  scores: [12, 28]
+};
+
+var result = u({ scores: { 1: 36 } }, scoreboard);
+
+expect(result).to.eql({ scores: [12, 36] });</code></pre><h4>Multiple updates
+</h4><pre><code class="language-javascript">var person = {
+  name: {
+    first: 'Mike',
+    last: 'Smith'
+  },
+  scores: [12, 28]
+};
+
+var result = u({ name: { last: 'Jones' }, scores: { 1: 36 } }, person);
+
+expect(result).to.eql({ name: { first: 'Mike', last: 'Jones' }, scores: [12, 36] });</code></pre><h4>Use a function
+</h4><pre><code class="language-javascript">function increment(i) { return i + 1; }
+var scoreboard = {
+  scores: {
+    team1: 0,
+    team2: 0
+  }
+};
+
+var result = u({ scores: { team2: increment } }, scoreboard);
+
+expect(result).to.eql({ scores: { team1: 0, team2: 1 } });</code></pre><h4>Array Manipulation
+</h4><p>Non-trivial array manipulations, such as element removal/insertion/sorting, can be implemented with functions. Because there are so many possible manipulations, we don't provide any helpers and leave this up to you. Simply ensure your function is pure and does not mutate its arguments.
+</p><pre><code class="language-javascript">function addTodo(todos) { return [].concat(todos, [{ done: false }]); }
+var state = {
+  todos: [
+    { done: false },
+    { done: false }
+  ]
+};
+var result = u({ todos: addTodo }, state);
+
+expect(result).to.eql({ todos: [{ done: false }, { done: false }, { done: false }]});</code></pre><h4>When null or undefined object, updeep uses a default object
+</h4><pre><code class="language-javascript">var result = u({ foo: 'bar' }, null);
+expect(result).to.eql({ foo: 'bar' });
+
+var result = u({ 0: 'foo', 1: 'bar' }, null);
+expect(result).to.eql(['foo', 'bar']);</code></pre><h4>Partial application
+</h4><pre><code class="language-javascript">function increment(i) { return i + 1; }
+
+var addOneYear = u({ age: increment });
+var result = addOneYear({ name: 'Shannon Barnes', age: 62 });
+
+expect(result).to.eql({ name: 'Shannon Barnes', age: 63 });</code></pre><h4>ES6 computed properties
+</h4><pre><code class="language-javascript">var key = 'age';
+
+var result = u({ person: { [key]: 21 } }, { person: { name: 'Olivier P.', age: 20 } });
+
+expect(result).to.eql({ person: { name: 'Olivier P.', age: 21 } });</code></pre><h3><a docset-name="freeze" docset-type="Function" name="Function-freeze"></a><code>u.freeze</code>
+</h3><p>Freeze your initial state to protect against mutations. Only performs the freezing in development, and returns the original object unchanged in production.
+</p><pre><code class="language-javascript">var state = u.freeze({ someKey: "Some Value" })
+state.someKey = "Mutate" // ERROR in development</code></pre><h3><a docset-name="_" docset-type="Function" name="Function-_"></a><code>u._</code>
+</h3><p>All updeep functions are curried.
+If you want to partially apply a function in an order other than the default argument order, you can use the placeholder.
+</p><pre><code class="language-javascript">function increment(i) { return i + 1; }
+var updateJoe = u(u._, { name: "Joe Merrill", age: 21 });
+var result = updateJoe({ age: increment });
+
+expect(result).to.eql({ name: "Joe Merrill", age: 22 });</code></pre><h3><a docset-name="updateIn" docset-type="Function" name="Function-updateIn"></a><code>u.updateIn(path(, value)(, object))</code>
+</h3><p>Update a single value with a simple string or array path. Can be use to update nested objects, arrays, or a combination. Can also be used to update every element of a nested array with <code>'*'</code>.
+</p><pre><code class="language-javascript">var result = u.updateIn('bunny.color', 'brown', { bunny: { color: 'black' } });
+
+expect(result).to.eql({ bunny: { color: 'brown' } });</code></pre><pre><code class="language-javascript">var result = u.updateIn('0.1.color', 'brown', [[{ color: 'blue' }, { color: 'red' }], []]);
+
+expect(result).to.eql( [[{ color: 'blue' }, { color: 'brown' }], []]);</code></pre><pre><code class="language-javascript">function increment(i) { return i + 1; }
+
+var result = u.updateIn('bunny.age', increment, { bunny: { age: 2 } });
+
+expect(result).to.eql({ bunny: { age: 3 } });</code></pre><pre><code class="language-javascript">var result = u({ pets: u.updateIn([0, 'bunny', 'age'], 3) }, { pets: [{ bunny: { age: 2 } }] });
+
+expect(result).to.eql({ pets: [{ bunny: { age: 3 } }] });</code></pre><pre><code class="language-javascript">var result = u.updateIn('todos.*.done', true, {
+  todos: [
+    { done: false },
+    { done: false },
+  ]
+});
+
+expect(result).to.eql({
+  todos: [
+    { done: true },
+    { done: true },
+  ]
+});</code></pre><h3><a docset-name="constant" docset-type="Function" name="Function-constant"></a><code>u.constant(object)</code>
+</h3><p>Sometimes, you want to replace an object outright rather than merging it.
+You'll need to use a function that returns the new object.
+<code>u.constant</code> creates that function for you.
+</p><pre><code class="language-javascript">var user = {
+  name: 'Mitch',
+  favorites: {
+    band: 'Nirvana',
+    movie: 'The Matrix'
+  }
+};
+
+var newFavorites = {
+  band: 'Coldplay'
+};
+
+var result = u({ favorites: u.constant(newFavorites) }, user);
+
+expect(result).to.eql({ name: 'Mitch', favorites: { band: 'Coldplay' } });</code></pre><pre><code class="language-javascript">var alwaysFour = u.constant(4);
+expect(alwaysFour(32)).to.eql(4);</code></pre><h3><a docset-name="if" docset-type="Function" name="Function-if"></a><code>u.if(predicate(, updates)(, object))</code>
+</h3><p>Apply <code>updates</code> if <code>predicate</code> is truthy, or if <code>predicate</code> is a function.
+It evaluates to truthy when called with <code>object</code>.
+</p><pre><code class="language-javascript">function isEven(x) { return x % 2 === 0; }
+function increment(x) { return x + 1; }
+
+var result = u({ value: u.if(isEven, increment) }, { value: 2 });
+
+expect(result).to.eql({ value: 3 });</code></pre><h3><a docset-name="ifElse" docset-type="Function" name="Function-ifElse"></a><code>u.ifElse(predicate(, trueUpdates)(, falseUpdates)(, object))</code>
+</h3><p>Apply <code>trueUpdates</code> if <code>predicate</code> is truthy, or if <code>predicate</code> is a function.
+It evaluates to truthy when called with <code>object</code>. Otherwise, apply <code>falseUpdates</code>.
+</p><pre><code class="language-javascript">function isEven(x) { return x % 2 === 0; }
+function increment(x) { return x + 1; }
+function decrement(x) { return x - 1; }
+
+var result = u({ value: u.ifElse(isEven, increment, decrement) }, { value: 3 });
+
+expect(result).to.eql({ value: 2 });</code></pre><h3><a docset-name="map" docset-type="Function" name="Function-map"></a><code>u.map(iteratee(, object))</code>
+</h3><p>If iteratee is a function, map it over the values in <code>object</code>.
+If it is an object, apply it as updates to each value in <code>object</code>,
+which is equivalent to  <code>u.map(u(...), object)</code>).
+</p><pre><code class="language-javascript">function increment(x) { return x + 1; }
+
+var result = u({ values: u.map(increment) }, { values: [0, 1] });
+
+expect(result).to.eql({ values: [1, 2] });</code></pre><pre><code class="language-javascript">function increment(x) { return x + 1; }
+
+var result = u.map(increment, [0, 1, 2]);
+
+expect(result).to.eql([1, 2, 3]);</code></pre><pre><code class="language-javascript">function increment(x) { return x + 1; }
+
+var result = u.map(increment, { a: 0, b: 1, c: 2 });
+
+expect(result).to.eql({ a: 1, b: 2, c: 3 });</code></pre><pre><code class="language-javascript">var result = u.map({ a: 100 }, [{ a: 0 }, { a: 1 }]);
+
+expect(result).to.eql([{ a: 100 }, { a: 100 }]);</code></pre><h3><a docset-name="omit" docset-type="Function" name="Function-omit"></a><code>u.omit(predicate(, object))</code>
+</h3><p>Remove properties. See <a href="https://lodash.com/docs#omit"><code>_.omit</code></a>.
+</p><pre><code class="language-javascript">var user = { user: { email: 'john@aol.com', username: 'john123', authToken: '1211..' } };
+
+var result = u({ user: u.omit('authToken') }, user);
+
+expect(result).to.eql({ user: { email: 'john@aol.com', username: 'john123' } });</code></pre><pre><code class="language-javascript">var user = {
+  user: {
+    email: 'john@aol.com',
+    username: 'john123',
+    authToken: '1211..',
+    SSN: 5551234
+  }
+};
+
+var result = u({ user: u.omit(['authToken', 'SSN']) }, user);
+
+expect(result).to.eql({ user: { email: 'john@aol.com', username: 'john123' } });</code></pre><h3><a docset-name="omitBy" docset-type="Function" name="Function-omitBy"></a><code>u.omitBy(predicate(, object))</code>
+</h3><p>Remove properties. See <a href="https://lodash.com/docs#omitBy"><code>_.omitBy</code></a>.
+</p><pre><code class="language-javascript">var user = {
+  user: {
+    email: 'john@aol.com',
+    username: 'john123',
+    authToken: '1211..',
+    SSN: 5551234
+  }
+};
+
+function isSensitive(value, key) { return key == 'SSN' }
+var result = u({ user: u.omitBy(isSensitive, user);
+
+expect(result).to.eql({ user: { email: 'john@aol.com', username: 'john123', authToken: '1211..' } });</code></pre><h3><a docset-name="reject" docset-type="Function" name="Function-reject"></a><code>u.reject(predicate(, object))</code>
+</h3><p>Reject items from an array. See <a href="https://lodash.com/docs#reject"><code>_.reject</code></a>.
+</p><pre><code class="language-javascript">function isEven(i) { return i % 2 === 0; }
+
+var result = u({ values: u.reject(isEven) }, { values: [1, 2, 3, 4] });
+
+expect(result).to.eql({ values: [1, 3] });</code></pre><h3><a docset-name="withDefault" docset-type="Function" name="Function-withDefault"></a><code>u.withDefault(default(, updates)(, object))</code>
+</h3><p>Like <code>u()</code>, but start with the default value if the original value is undefined.
+</p><pre><code class="language-javascript">var result = u({ value: u.withDefault([], { 0: 3 }) }, {});
+
+expect(result).to.eql({ value: [3] });</code></pre><p>See the <a href="https://github.com/substantial/updeep/blob/master/test/index.js">tests</a> for more examples.
+</p><h3><a docset-name="is" docset-type="Function" name="Function-is"></a><code>u.is(path(, predicate)(, object))</code>
+</h3><p>Returns <code>true</code> if the <code>predicate</code> matches the <code>path</code> applied to the <code>object</code>.
+If the <code>predicate</code> is a function, the result is returned. If not, they are compared with <code>===</code>.
+</p><pre><code class="language-javascript">var result = u.is('friend.age', 22, { friend: { age: 22 } });
+
+expect(result).to.eql(true);</code></pre><pre><code class="language-javascript">function isEven(i) { return i % 2 === 0; }
+
+var result = u.is('friend.age', isEven, { friend: { age: 22 } });
+
+expect(result).to.eql(true);</code></pre><pre><code class="language-javascript">var person = {
+  person: {
+    name: {
+      first: 'Jen',
+      last: 'Matthews'
+    }
+  }
+};
+
+// Update person's last name to Simpson if their first name is Jen
+var result = u({
+  person: u.if(
+    u.is('name.first', 'Jen'),
+    u.updateIn('name.last', 'Simpson')
+  )
+}, person);
+
+expect(result).to.eql({ person: { name: { first: 'Jen', last: 'Simpson' } } });</code></pre></body></html>

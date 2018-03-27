@@ -1,0 +1,97 @@
+<html><head><title></title><link href="assets/github-style.css" rel="stylesheet"></link><link href="assets/prism.css" rel="stylesheet"></link><script src="assets/prism.js"></script></head><body><h1>updeep
+</h1><blockquote><p>Easily update nested frozen objects and arrays in a declarative and immutable
+manner.
+</p></blockquote><h2>About
+</h2><p>updeep makes updating deeply nested objects/arrays painless by allowing you to
+declare the updates you would like to make and it will take care of the rest. It
+will recursively return the same instance if no changes have been made, making
+it ideal for using reference equality checks to detect changes (like
+<a href="https://facebook.github.io/react/docs/pure-render-mixin.html">PureRenderMixin</a>).
+</p><p>Because of this, everything returned by updeep is frozen. Not only that, but
+updeep assumes that every object passed in to update is immutable, so it may
+freeze objects passed in as well. Note that the freezing only happens in
+development.
+</p><p>updeep requires <a href="http://lodash.com">lodash</a>, but works very well with <a href="https://github.com/lodash/lodash-fp">lodash-fp</a> or <a href="http://ramdajs.com/">Ramda</a>.
+As a matter of fact, many of the helpers functions are <a href="http://www.datchley.name/currying-vs-partial-application/">curried</a>
+<a href="http://lodash.com">lodash</a> functions with their parameters reversed (like <a href="https://github.com/lodash/lodash-fp">lodash-fp</a>).
+</p><p>Note that the parameters may be backwards from what you may be used to. updeep
+supports <a href="http://www.datchley.name/currying-vs-partial-application/">partial application</a>, so the parameter order is:
+<code>updeep(updates, object)</code>.
+</p><h2>API and Examples
+</h2><h3>Full example
+</h3><pre><code class="language-javascript">var u = require('updeep');
+
+var person = {
+  name: { first: 'Bill', last: 'Sagat' },
+  children: [
+    { name: 'Mary-Kate', age: 7 },
+    { name: 'Ashley', age: 7 }
+  ],
+  todo: [
+    'Be funny',
+    'Manage household'
+  ],
+  email: 'bill@example.com',
+  version: 1
+};
+
+var inc = function(i) { return i + 1; }
+var eq = function(x) { return function(y) { return x == y } };
+
+var newPerson = u({
+  // Change first name
+  name: { first: 'Bob' },
+  // Increment all children's ages
+  children: u.map({ age: inc }),
+  // Update email
+  email: 'bob@example.com',
+  // Remove todo
+  todo: u.reject(eq('Be funny')),
+  // Increment version
+  version: inc
+}, person);
+// =&gt; {
+//  name: { first: 'Bob', last: 'Sagat' },
+//  children: [
+//    { name: 'Mary-Kate', age: 8 },
+//    { name: 'Ashley', age: 8 }
+//  ],
+//  todo: [
+//    'Manage household'
+//  ],
+//  email: 'bob@example.com',
+//  version: 2
+//}</code></pre><p><strong>NOTE</strong>: All functions are curried, so if you see <code>f(x(, y))</code>, it can be called with either <code>f(x, y)</code> or <code>f(x)(y)</code>.
+</p><h2>Install
+</h2><pre><code class="language-sh">$ npm install --save updeep</code></pre><h2>Configuration
+</h2><p>If <code>NODE_ENV</code> is <code>"production"</code>, updeep will not attempt to freeze objects.
+This may yield a slight performance gain.
+</p><h2>Motivation
+</h2><p>While creating reducers for use with <a href="https://github.com/gaearon/redux">redux</a>, I wanted something that made it
+easy to work with frozen objects. Native javascript objects have some nice
+advantages over things like <a href="https://github.com/facebook/immutable-js">Immutable.js</a> such as debugging and
+destructuring. I wanted something more powerful than <a href="https://github.com/aearly/icepick">icepick</a> and more
+composable than <a href="https://facebook.github.io/react/docs/update.html">React.addons.update</a>.
+</p><p>If you're manipulating massive amounts of data frequently, you may want to
+benchmark, as <a href="https://github.com/facebook/immutable-js">Immutable.js</a> should be more efficient in that
+case.
+</p><h2>Contributing
+</h2><ol><li>Fork it.
+</li><li>Create your feature branch (<code>git checkout -b my-new-feature</code>).
+</li><li>Run <code>gulp</code> to run tests and lint.
+</li><li>Commit your changes (<code>git commit -am 'Added some feature'</code>).
+</li><li>Push to the branch (<code>git push origin my-new-feature</code>).
+</li><li>Create new Pull Request.
+</li></ol><h2>Releasing New Version
+</h2><ol><li><p>Login to npm, if you don't have access to the package, ask for it.
+</p><pre><code class="language-bash">$ npm login</code></pre></li><li><p>Make sure the build passes (best to let it pass on travis, but you can run it locally):
+</p><pre><code class="language-bash">$ gulp</code></pre></li><li><p>Bump the version:
+</p><pre><code class="language-bash">$ npm version major|minor|patch</code></pre></li><li>Update the <code>CHANGELOG.md</code>.
+</li><li>Add the new version and corresponding notes.
+</li><li>Add a link to the new version.
+</li><li>Update the <code>unreleased</code> link compare to be based off of the new version.
+</li><li><p>Publish and push:
+</p><pre><code class="language-bash">$ npm publish
+$ git push origin master --follow-tags</code></pre></li></ol><h2>License
+</h2><p>MIT ©2015 <a href="http://substantial.com">Substantial</a>
+</p></body></html>

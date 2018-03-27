@@ -95,9 +95,9 @@ my %files = ( 'index.html' => $index );
 }
 
 $docset->add_doc( $_->[0], $_->[1] ) for pairs %files;
-$docset->add_asset( 'github-style.css' );
-$docset->add_asset( 'prism.js' );
-$docset->add_asset( 'prism.css' );
+$docset->add_asset( 'assets/github-style.css' );
+$docset->add_asset( 'assets/prism.js' );
+$docset->add_asset( 'assets/prism.css' );
 
 $docset->generate;
 
